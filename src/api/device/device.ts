@@ -16,6 +16,11 @@ export interface Device extends TreeModel<Device> {
   img?: string; // img : 保存图片路径-通常存在oss中
 }
 
+export interface LEDVO {
+  topic: string;
+  ledcmd: number;
+}
+
 export const deviceList = (params?: Device | any) =>
   defHttp.get<Device>({ url: adminPath + '/device/device/list', params });
 
@@ -42,3 +47,7 @@ export const deviceDelete = (params?: Device | any) =>
 
 export const deviceTreeData = (params?: any) =>
   defHttp.get<TreeDataModel[]>({ url: adminPath + '/device/device/treeData', params });
+export const deviceOpenLight = (params?: LEDVO | any) =>
+  defHttp.get<Device>({ url: adminPath + '/device/device/openLight', params });
+export const deviceCloseLight = (params?: LEDVO | any) =>
+  defHttp.get<Device>({ url: adminPath + '/device/device/closeLight', params });

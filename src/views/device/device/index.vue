@@ -7,7 +7,7 @@
   <PageWrapper :sidebarWidth="230">
     <template #sidebar>
       <BasicTree
-        :title="t('device : 存储设备层次的根表')"
+        :title="t('设备分类')"
         :search="true"
         :toolbar="true"
         :api="deviceTreeData"
@@ -31,5 +31,6 @@
 
   function handleSelect(keys: string[]) {
     treeCode.value = keys[0];
+    console.log('deviceId', treeCode.value);
   }
 </script>

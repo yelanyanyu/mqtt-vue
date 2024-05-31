@@ -17,6 +17,15 @@
       <span> {{ getTitle.value }} </span>
     </template>
     <BasicForm @register="registerForm" />
+    <a-button
+      @click="deviceOpenLight({ ledcmd: 1, topic: record.deviceName + '/get' })"
+      v-if="record.deviceStatus == 0"
+    >
+      {{ t('开灯') }}
+    </a-button>
+    <a-button @click="deviceCloseLight({ ledcmd: 0, topic: record.deviceName + '/get' })">
+      {{ t('关灯') }}
+    </a-button>
   </BasicDrawer>
 </template>
 <script lang="ts" setup name="ViewsDeviceDeviceForm">
@@ -27,7 +36,14 @@
   import { Icon } from '/@/components/Icon';
   import { BasicForm, FormSchema, useForm } from '/@/components/Form';
   import { BasicDrawer, useDrawerInner } from '/@/components/Drawer';
-  import { Device, deviceSave, deviceForm, deviceTreeData } from '/@/api/device/device';
+  import {
+    Device,
+    deviceSave,
+    deviceForm,
+    deviceTreeData,
+    deviceOpenLight,
+    deviceCloseLight,
+  } from '/@/api/device/device';
 
   const emit = defineEmits(['success', 'register']);
 
@@ -38,7 +54,9 @@
 
   const getTitle = computed(() => ({
     icon: meta.icon || 'i-ant-design:book-outlined',
-    value: record.value.isNewRecord ? t('新增device : 存储设备层次的根表') : t('编辑device : 存储设备层次的根表'),
+    value: record.value.isNewRecord
+      ? t('新增device : 存储设备层次的根表')
+      : t('编辑device : 存储设备层次的根表'),
   }));
 
   const inputFormSchemas: FormSchema[] = [

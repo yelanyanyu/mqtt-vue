@@ -37,7 +37,7 @@
   import { router } from '/@/router';
   import { Icon } from '/@/components/Icon';
   import { BasicTable, BasicColumn, useTable } from '/@/components/Table';
-  import { deviceDelete, deviceListData } from '/@/api/device/device';
+  import { deviceDelete, deviceListData, deviceOpenLight } from '/@/api/device/device';
   import { deviceDisable, deviceEnable } from '/@/api/device/device';
   import { useDrawer } from '/@/components/Drawer';
   import { FormProps } from '/@/components/Form';
@@ -53,7 +53,7 @@
 
   const getTitle = {
     icon: meta.icon || 'i-ant-design:book-outlined',
-    value: meta.title || t('device : 存储设备层次的根表管理'),
+    value: meta.title || t('设备'),
   };
 
   const searchForm: FormProps = {
@@ -179,7 +179,7 @@
     () => props.treeCode,
     async () => {
       await getForm().setFieldsValue({
-        'deviceId': props.treeCode,
+        deviceId: props.treeCode,
       });
       reload();
     },
@@ -194,7 +194,6 @@
   function handleForm(record: Recordable) {
     openDrawer(true, record);
   }
-
   async function handleDisable(record: Recordable) {
     const params = { deviceId: record.deviceId };
     const res = await deviceDisable(params);
