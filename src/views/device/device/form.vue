@@ -18,24 +18,51 @@
     </template>
     <BasicForm @register="registerForm" />
     <a-button
-      @click="deviceOpenLight({ ledcmd: 1, topic: record.deviceName + '/get' })"
-      v-if="record.deviceStatus == 0"
+      @click="
+        deviceOpenLight({
+          deviceId: record.deviceId,
+          deviceName: record.deviceName,
+          deviceStatus: record.deviceStatus,
+          img: record.img,
+          ledcmd: 1,
+          topic: record.deviceName + '/get',
+        })
+      "
     >
       {{ t('开灯') }}
     </a-button>
-    <a-button @click="deviceCloseLight({ ledcmd: 0, topic: record.deviceName + '/get' })">
+    <a-button
+      @click="
+        deviceCloseLight({
+          deviceId: record.deviceId,
+          deviceName: record.deviceName,
+          deviceStatus: record.deviceStatus,
+          img: record.img,
+          ledcmd: 0,
+          topic: record.deviceName + '/get',
+        })
+      "
+    >
       {{ t('关灯') }}
     </a-button>
+    <Description
+      title="基础示例"
+      :collapseOptions="{ canExpand: true, helpMessage: 'help me' }"
+      :column="3"
+      :data="mockData"
+      :schema="schema"
+    />
+    <Description @register="register" class="mt-4" />
   </BasicDrawer>
 </template>
 <script lang="ts" setup name="ViewsDeviceDeviceForm">
-  import { ref, unref, computed } from 'vue';
+  import { ref, unref, computed, onMounted, onBeforeMount } from 'vue';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useMessage } from '/@/hooks/web/useMessage';
   import { router } from '/@/router';
   import { Icon } from '/@/components/Icon';
   import { BasicForm, FormSchema, useForm } from '/@/components/Form';
-  import { BasicDrawer, useDrawerInner } from '/@/components/Drawer';
+  import { BasicDrawer, useDrawer, useDrawerInner } from '/@/components/Drawer';
   import {
     Device,
     deviceSave,
@@ -44,6 +71,9 @@
     deviceOpenLight,
     deviceCloseLight,
   } from '/@/api/device/device';
+  import { defineComponent } from 'vue';
+  import { Alert } from 'ant-design-vue';
+  import { Description, DescItem, useDescription } from '/@/components/Description/index';
 
   const emit = defineEmits(['success', 'register']);
 
@@ -58,6 +88,16 @@
       ? t('新增device : 存储设备层次的根表')
       : t('编辑device : 存储设备层次的根表'),
   }));
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let intervalId = null;
+  onMounted(() => {
+    intervalId = setInterval(() => {}, 3000);
+  });
+
+  onBeforeMount(() => {
+    if (intervalId) clearInterval(intervalId);
+  });
 
   const inputFormSchemas: FormSchema[] = [
     {
@@ -189,4 +229,27 @@
       setDrawerProps({ confirmLoading: false });
     }
   }
+
+  const mockData: any = {
+    deviceName: 'deviceName',
+    deviceStatus: 'deviceStatus',
+    runningStatus: 'runningStatus',
+  };
+  const schema: DescItem[] = [
+    {
+      field: 'deviceName',
+      label: '设备名称',
+    },
+    {
+      field: 'deviceStatus',
+      label: '设备状态',
+      render: (curVal, data) => {
+        return `${data.deviceName}-${curVal}`;
+      },
+    },
+    {
+      field: 'runningStatus',
+      label: '运行状态',
+    },
+  ];
 </script>

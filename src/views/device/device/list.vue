@@ -12,17 +12,20 @@
       </template>
       <template #toolbar>
         <a-button @click="expandAll" :title="t('展开一级')">
-          <Icon icon="i-bi:chevron-double-down" /> {{ t('展开') }}
+          <Icon icon="i-bi:chevron-double-down" />
+          {{ t('展开') }}
         </a-button>
         <a-button @click="collapseAll" :title="t('折叠全部')">
-          <Icon icon="i-bi:chevron-double-up" /> {{ t('折叠') }}
+          <Icon icon="i-bi:chevron-double-up" />
+          {{ t('折叠') }}
         </a-button>
         <a-button type="primary" @click="handleForm({})" v-auth="'device:device:edit'">
-          <Icon icon="i-fluent:add-12-filled" /> {{ t('新增') }}
+          <Icon icon="i-fluent:add-12-filled" />
+          {{ t('新增') }}
         </a-button>
       </template>
       <template #firstColumn="{ record }">
-        <a @click="handleForm({ deviceId: record.deviceId })">
+        <a @click="handleDetail({ deviceId: record.deviceId })">
           {{ record.deviceName }}
         </a>
       </template>
@@ -37,7 +40,12 @@
   import { router } from '/@/router';
   import { Icon } from '/@/components/Icon';
   import { BasicTable, BasicColumn, useTable } from '/@/components/Table';
-  import { deviceDelete, deviceListData, deviceOpenLight } from '/@/api/device/device';
+  import {
+    deviceDelete,
+    deviceListData,
+    deviceOpenLight,
+    subscribeTopic,
+  } from '/@/api/device/device';
   import { deviceDisable, deviceEnable } from '/@/api/device/device';
   import { useDrawer } from '/@/components/Drawer';
   import { FormProps } from '/@/components/Form';
@@ -109,6 +117,14 @@
   const actionColumn: BasicColumn = {
     width: 160,
     actions: (record: Recordable) => [
+      {
+        icon: 'i-ant-design:eye-outlined',
+        title: t('订阅主题'),
+        onClick: () => {
+          handleSubscribe(record);
+        },
+        auth: 'device:device:edit',
+      },
       {
         icon: 'i-clarity:note-edit-line',
         title: t('编辑device : 存储设备层次的根表'),
@@ -194,6 +210,11 @@
   function handleForm(record: Recordable) {
     openDrawer(true, record);
   }
+
+  function handleDetail(record: Recordable) {
+    openDrawer(true, { deviceId: record.deviceId, isDetail: true });
+  }
+
   async function handleDisable(record: Recordable) {
     const params = { deviceId: record.deviceId };
     const res = await deviceDisable(params);
@@ -211,6 +232,13 @@
   async function handleDelete(record: Recordable) {
     const params = { deviceId: record.deviceId };
     const res = await deviceDelete(params);
+    showMessage(res.message);
+    handleSuccess(record);
+  }
+
+  async function handleSubscribe(record: Recordable) {
+    const params = { topic: record.deviceName + '/get' };
+    const res = await subscribeTopic(params);
     showMessage(res.message);
     handleSuccess(record);
   }
