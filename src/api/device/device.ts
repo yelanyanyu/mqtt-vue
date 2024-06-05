@@ -21,6 +21,11 @@ export interface LEDVO extends Device {
   ledcmd: number;
 }
 
+export interface LedData {
+  lux: number;
+  temprature: number;
+}
+
 export const deviceList = (params?: Device | any) =>
   defHttp.get<Device>({ url: adminPath + '/device/device/list', params });
 
@@ -48,15 +53,15 @@ export const deviceDelete = (params?: Device | any) =>
 export const deviceTreeData = (params?: any) =>
   defHttp.get<TreeDataModel[]>({ url: adminPath + '/device/device/treeData', params });
 export const deviceOpenLight = (params?: LEDVO | any) => {
-  console.log(JSON.stringify(params));
-  defHttp.get<Device>({ url: adminPath + '/device/device/openLight', params });
+  return defHttp.get<Device>({ url: adminPath + '/device/device/openLight', params });
 };
 export const deviceCloseLight = (params?: LEDVO | any) => {
-  console.log(JSON.stringify(params));
   return defHttp.get<Device>({ url: adminPath + '/device/device/closeLight', params });
 };
 
 export const subscribeTopic = (params?: any) => {
-  console.log('subscribe topic: ', params);
   return defHttp.get<string>({ url: adminPath + '/device/device/subscribeTopic', params });
+};
+export const queryDeviceData = (params?: any) => {
+  return defHttp.get<string>({ url: adminPath + '/device/device/queryMessage', params });
 };

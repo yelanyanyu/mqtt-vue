@@ -17,46 +17,25 @@
       <span> {{ getTitle.value }} </span>
     </template>
     <BasicForm @register="registerForm" />
-    <a-button
-      @click="
-        deviceOpenLight({
-          deviceId: record.deviceId,
-          deviceName: record.deviceName,
-          deviceStatus: record.deviceStatus,
-          img: record.img,
-          ledcmd: 1,
-          topic: record.deviceName + '/get',
-        })
-      "
-    >
+    <a-button @click="handleOpenLed(record)">
       {{ t('开灯') }}
     </a-button>
-    <a-button
-      @click="
-        deviceCloseLight({
-          deviceId: record.deviceId,
-          deviceName: record.deviceName,
-          deviceStatus: record.deviceStatus,
-          img: record.img,
-          ledcmd: 0,
-          topic: record.deviceName + '/get',
-        })
-      "
-    >
+    <a-button @click="handleCloseLed(record)">
       {{ t('关灯') }}
     </a-button>
-    <Description
-      title="基础示例"
-      :collapseOptions="{ canExpand: true, helpMessage: 'help me' }"
-      :column="3"
-      :data="mockData"
-      :schema="schema"
-    />
-    <Description @register="register" class="mt-4" />
+    <a-descriptions title="设备实时信息" bordered>
+      <a-descriptions-item label="设备名">{{ record.deviceName }}</a-descriptions-item>
+      <a-descriptions-item label="设备ID">{{ record.deviceId }}</a-descriptions-item>
+      <a-descriptions-item label="设备状态" :span="3">
+        <a-badge :status="badgeStatus.value" :text="badgeStatus.label" />
+      </a-descriptions-item>
+      <a-descriptions-item label="光照强度(lux)">{{ ledData.lux }}</a-descriptions-item>
+      <a-descriptions-item label="温度">{{ ledData.temprature }}</a-descriptions-item>
+    </a-descriptions>
   </BasicDrawer>
 </template>
 <script lang="ts" setup name="ViewsDeviceDeviceForm">
-  import { ref, unref, computed, onMounted, onBeforeMount } from 'vue';
+  import { ref, unref, computed, onMounted, onBeforeMount, watch } from 'vue';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useMessage } from '/@/hooks/web/useMessage';
   import { router } from '/@/router';
@@ -70,10 +49,9 @@
     deviceTreeData,
     deviceOpenLight,
     deviceCloseLight,
+    queryDeviceData,
+    subscribeTopic,
   } from '/@/api/device/device';
-  import { defineComponent } from 'vue';
-  import { Alert } from 'ant-design-vue';
-  import { Description, DescItem, useDescription } from '/@/components/Description/index';
 
   const emit = defineEmits(['success', 'register']);
 
@@ -89,14 +67,42 @@
       : t('编辑device : 存储设备层次的根表'),
   }));
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let intervalId = null;
-  onMounted(() => {
-    intervalId = setInterval(() => {}, 3000);
+  const isTimerActive = ref(false);
+
+  watch(isTimerActive, (newVal) => {
+    if (newVal) {
+      startTimer();
+    } else {
+      stopTimer();
+    }
   });
 
-  onBeforeMount(() => {
-    if (intervalId) clearInterval(intervalId);
+  function startTimer() {
+    if (!intervalId) {
+      intervalId = window.setInterval(() => {
+        handleLedDataQuery();
+      }, 5000);
+    }
+  }
+
+  function stopTimer() {
+    if (intervalId) {
+      clearInterval(intervalId);
+      console.log('close timer');
+      intervalId = null;
+    }
+  }
+
+  let intervalId = null;
+
+  const ledData = ref({
+    lux: '',
+    temprature: '',
+  });
+
+  const badgeStatus = ref({
+    value: 'default',
+    label: '不在运行',
   });
 
   const inputFormSchemas: FormSchema[] = [
@@ -230,26 +236,64 @@
     }
   }
 
-  const mockData: any = {
-    deviceName: 'deviceName',
-    deviceStatus: 'deviceStatus',
-    runningStatus: 'runningStatus',
-  };
-  const schema: DescItem[] = [
-    {
-      field: 'deviceName',
-      label: '设备名称',
-    },
-    {
-      field: 'deviceStatus',
-      label: '设备状态',
-      render: (curVal, data) => {
-        return `${data.deviceName}-${curVal}`;
-      },
-    },
-    {
-      field: 'runningStatus',
-      label: '运行状态',
-    },
-  ];
+  async function handleLedDataQuery() {
+    if (record.value.deviceName != undefined) {
+      queryDeviceData({ topic: record.value.deviceName + '/get' })
+        .then((data) => {
+          console.log('data: ', data);
+          if (data === undefined || data === null || data === '') {
+            badgeStatus.value.value = 'error';
+            badgeStatus.value.label = '设备出错';
+          } else {
+            ledData.value.lux = data.lux;
+            ledData.value.temprature = data.temprature;
+            badgeStatus.value.value = 'processing';
+            badgeStatus.value.label = '正在运行';
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    }
+  }
+
+  async function handleOpenLed(record: Recordable) {
+    deviceOpenLight({
+      deviceid: record.deviceid,
+      devicename: record.devicename,
+      devicestatus: record.devicestatus,
+      img: record.img,
+      ledcmd: 1,
+      topic: record.devicename + '/get',
+    }).then((data) => {
+      isTimerActive.value = true;
+      badgeStatus.value.value = 'processing';
+      badgeStatus.value.label = '正在运行';
+      handleSubscribe(record);
+      console.log('openLed: ', data);
+    });
+  }
+
+  async function handleCloseLed(record: Recordable) {
+    deviceCloseLight({
+      deviceId: record.deviceId,
+      deviceName: record.deviceName,
+      deviceStatus: record.deviceStatus,
+      img: record.img,
+      ledcmd: 0,
+      topic: record.deviceName + '/get',
+    }).then((data) => {
+      isTimerActive.value = false;
+      badgeStatus.value.value = 'default';
+      badgeStatus.value.label = '不在运行';
+      ledData.value.lux = '';
+      ledData.value.temprature = '';
+      console.log('closeLed: ', data);
+    });
+  }
+  async function handleSubscribe(record: Recordable) {
+    const params = { topic: record.deviceName + '/get' };
+    const res = await subscribeTopic(params);
+    showMessage(res.message);
+  }
 </script>

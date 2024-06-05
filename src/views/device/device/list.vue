@@ -34,7 +34,7 @@
   </div>
 </template>
 <script lang="ts" setup name="ViewsDeviceDeviceList">
-  import { unref, watch, nextTick } from 'vue';
+  import { unref, watch, nextTick, onMounted } from 'vue';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useMessage } from '/@/hooks/web/useMessage';
   import { router } from '/@/router';
@@ -101,7 +101,7 @@
       align: 'center',
     },
     {
-      title: t('device_status : 设备状态'),
+      title: t('是否订阅'),
       dataIndex: 'deviceStatus',
       width: 130,
       align: 'center',

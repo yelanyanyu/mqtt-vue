@@ -8,6 +8,7 @@ import 'ant-design-vue/dist/reset.css';
 import '/@/design/index.less';
 
 import App from './App.vue';
+import Antd from 'ant-design-vue';
 import { createApp } from 'vue';
 import { registerGlobComp } from '/@/components/registerGlobComp';
 import { initAppConfigStore } from '/@/logics/initAppConfig';
@@ -49,7 +50,7 @@ async function bootstrap() {
 
   // https://next.router.vuejs.org/api/#isready
   // await router.isReady();
-
+  app.use(Antd);
   app.mount('#app');
 }
 
