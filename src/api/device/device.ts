@@ -21,6 +21,11 @@ export interface LEDVO extends Device {
   ledcmd: number;
 }
 
+export interface FanVO extends Device {
+  topic: string;
+  fan: number;
+}
+
 export interface LedData {
   lux: number;
   temprature: number;
@@ -64,4 +69,10 @@ export const subscribeTopic = (params?: any) => {
 };
 export const queryDeviceData = (params?: any) => {
   return defHttp.get<string>({ url: adminPath + '/device/device/queryMessage', params });
+};
+export const deviceOpenFan = (params?: any) => {
+  return defHttp.get<string>({ url: adminPath + '/device/device/openFan', params });
+};
+export const deviceCloseFan = (params?: any) => {
+  return defHttp.get<string>({ url: adminPath + '/device/device/closeFan', params });
 };

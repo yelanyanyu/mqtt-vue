@@ -17,11 +17,11 @@
       <span> {{ getTitle.value }} </span>
     </template>
     <BasicForm @register="registerForm" />
-    <a-button @click="handleOpenLed(record)">
-      {{ t('开灯') }}
+    <a-button @click="enableDevice(record)">
+      {{ t('开启设备') }}
     </a-button>
-    <a-button @click="handleCloseLed(record)">
-      {{ t('关灯') }}
+    <a-button @click="disableDevice(record)">
+      {{ t('关闭设备') }}
     </a-button>
     <a-descriptions title="设备实时信息" bordered>
       <a-descriptions-item label="设备名">{{ record.deviceName }}</a-descriptions-item>
@@ -29,8 +29,28 @@
       <a-descriptions-item label="设备状态" :span="3">
         <a-badge :status="badgeStatus.value" :text="badgeStatus.label" />
       </a-descriptions-item>
-      <a-descriptions-item label="光照强度(lux)">{{ ledData.lux }}</a-descriptions-item>
-      <a-descriptions-item label="温度">{{ ledData.temprature }}</a-descriptions-item>
+      <a-descriptions-item label="光照强度(lux)">{{ deviceData.lux }}</a-descriptions-item>
+      <a-descriptions-item label="温度">{{ deviceData.temprature }}</a-descriptions-item>
+      <a-descriptions-item label="风扇"
+        >{{ fanData.status }}
+
+        <a-button @click="handleFanOpen(record)">
+          {{ t('开风扇') }}
+        </a-button>
+        <a-button @click="handleFanClose(record)">
+          {{ t('关风扇') }}
+        </a-button>
+      </a-descriptions-item>
+      <a-descriptions-item label="led"
+        >{{ ledStatus.status }}
+
+        <a-button @click="handleOpenLed(record)">
+          {{ t('开灯') }}
+        </a-button>
+        <a-button @click="handleCloseLed(record)">
+          {{ t('关灯') }}
+        </a-button>
+      </a-descriptions-item>
     </a-descriptions>
   </BasicDrawer>
 </template>
@@ -51,6 +71,10 @@
     deviceCloseLight,
     queryDeviceData,
     subscribeTopic,
+    deviceOpenFan,
+    deviceCloseFan,
+    deviceEnable,
+    deviceDisable,
   } from '/@/api/device/device';
 
   const emit = defineEmits(['success', 'register']);
@@ -82,20 +106,21 @@
       intervalId = window.setInterval(() => {
         handleLedDataQuery();
       }, 5000);
+      console.log('start timer: ', intervalId);
     }
   }
 
   function stopTimer() {
     if (intervalId) {
       clearInterval(intervalId);
-      console.log('close timer');
+      console.log('close timer id: ', intervalId);
       intervalId = null;
     }
   }
 
   let intervalId = null;
 
-  const ledData = ref({
+  const deviceData = ref({
     lux: '',
     temprature: '',
   });
@@ -103,6 +128,14 @@
   const badgeStatus = ref({
     value: 'default',
     label: '不在运行',
+  });
+
+  const fanData = ref({
+    status: 0,
+  });
+
+  const ledStatus = ref({
+    status: 0,
   });
 
   const inputFormSchemas: FormSchema[] = [
@@ -238,15 +271,15 @@
 
   async function handleLedDataQuery() {
     if (record.value.deviceName != undefined) {
-      queryDeviceData({ topic: record.value.deviceName + '/get' })
+      queryDeviceData({ topic: record.value.deviceName })
         .then((data) => {
           console.log('data: ', data);
           if (data === undefined || data === null || data === '') {
             badgeStatus.value.value = 'error';
             badgeStatus.value.label = '设备出错';
           } else {
-            ledData.value.lux = data.lux;
-            ledData.value.temprature = data.temprature;
+            deviceData.value.lux = data.lux;
+            deviceData.value.temprature = data.temprature;
             badgeStatus.value.value = 'processing';
             badgeStatus.value.label = '正在运行';
           }
@@ -257,43 +290,103 @@
     }
   }
 
+  async function enableDevice(record: Recordable) {
+    isTimerActive.value = true;
+    await handleSubscribe(record);
+  }
+
+  async function disableDevice(record: Recordable) {
+    isTimerActive.value = false;
+  }
+
   async function handleOpenLed(record: Recordable) {
-    deviceOpenLight({
-      deviceid: record.deviceid,
-      devicename: record.devicename,
-      devicestatus: record.devicestatus,
-      img: record.img,
-      ledcmd: 1,
-      topic: record.devicename + '/get',
-    }).then((data) => {
-      isTimerActive.value = true;
-      badgeStatus.value.value = 'processing';
-      badgeStatus.value.label = '正在运行';
-      handleSubscribe(record);
-      console.log('openLed: ', data);
-    });
+    if (isTimerActive.value) {
+      deviceOpenLight({
+        deviceid: record.deviceId,
+        devicename: record.deviceName,
+        devicestatus: record.deviceStatus,
+        img: record.img,
+        ledcmd: 1,
+        topic: record.deviceName + '/get',
+      }).then((data) => {
+        // isTimerActive.value = true;
+        if (data.result) {
+          ledStatus.value.status = 1;
+        } else {
+          showMessage(t('开启led失败'));
+        }
+        console.log('openLed: ', data);
+      });
+    }
   }
 
   async function handleCloseLed(record: Recordable) {
-    deviceCloseLight({
-      deviceId: record.deviceId,
-      deviceName: record.deviceName,
-      deviceStatus: record.deviceStatus,
-      img: record.img,
-      ledcmd: 0,
-      topic: record.deviceName + '/get',
-    }).then((data) => {
-      isTimerActive.value = false;
-      badgeStatus.value.value = 'default';
-      badgeStatus.value.label = '不在运行';
-      ledData.value.lux = '';
-      ledData.value.temprature = '';
-      console.log('closeLed: ', data);
-    });
+    if (isTimerActive.value) {
+      deviceCloseLight({
+        deviceId: record.deviceId,
+        deviceName: record.deviceName,
+        deviceStatus: record.deviceStatus,
+        img: record.img,
+        ledcmd: 0,
+        topic: record.deviceName + '/get',
+      }).then((data) => {
+        // isTimerActive.value = false;
+        if (data.result) {
+          ledStatus.value.status = 0;
+        } else {
+          showMessage(t('关闭led失败'));
+        }
+        console.log('closeLed: ', data);
+      });
+    }
   }
   async function handleSubscribe(record: Recordable) {
-    const params = { topic: record.deviceName + '/get' };
+    const params = { topic: record.deviceName };
     const res = await subscribeTopic(params);
     showMessage(res.message);
+  }
+
+  async function handleFanOpen(record: Recordable) {
+    if (isTimerActive.value) {
+      deviceOpenFan({
+        deviceId: record.deviceId,
+        deviceName: record.deviceName,
+        deviceStatus: record.deviceStatus,
+        fan: 1,
+        topic: record.deviceName + '/get',
+      })
+        .then((data) => {
+          fanData.value.status = 1;
+          console.log('closeLed: ', data);
+        })
+        .catch((e) => {
+          badgeStatus.value.value = 'error';
+          badgeStatus.value.label = 'fan 出错';
+          showMessage(t('开启风扇失败'));
+          console.log(e);
+        });
+    }
+  }
+
+  async function handleFanClose(record: Recordable) {
+    if (isTimerActive.value) {
+      deviceCloseFan({
+        deviceId: record.deviceId,
+        deviceName: record.deviceName,
+        deviceStatus: record.deviceStatus,
+        fan: 0,
+        topic: record.deviceName + '/get',
+      })
+        .then((data) => {
+          fanData.value.status = 0;
+          console.log('closeLed: ', data);
+        })
+        .catch((e) => {
+          badgeStatus.value.value = 'error';
+          badgeStatus.value.label = 'fan 出错';
+          showMessage(t('关闭风扇失败'));
+          console.log(e);
+        });
+    }
   }
 </script>
