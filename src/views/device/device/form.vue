@@ -30,7 +30,7 @@
         <a-badge :status="badgeStatus.value" :text="badgeStatus.label" />
       </a-descriptions-item>
       <a-descriptions-item label="光照强度(lux)">{{ deviceData.lux }}</a-descriptions-item>
-      <a-descriptions-item label="温度">{{ deviceData.temprature }}</a-descriptions-item>
+      <a-descriptions-item label="温度">{{ deviceData.temperature }}</a-descriptions-item>
       <a-descriptions-item label="风扇"
         >{{ fanData.status }}
 
@@ -105,7 +105,7 @@
     if (!intervalId) {
       intervalId = window.setInterval(() => {
         handleLedDataQuery();
-      }, 5000);
+      }, 1000);
       console.log('start timer: ', intervalId);
     }
   }
@@ -122,7 +122,7 @@
 
   const deviceData = ref({
     lux: '',
-    temprature: '',
+    temperature: '',
   });
 
   const badgeStatus = ref({
@@ -279,7 +279,7 @@
             badgeStatus.value.label = '设备出错';
           } else {
             deviceData.value.lux = data.lux;
-            deviceData.value.temprature = data.temprature;
+            deviceData.value.temperature = data.temperature;
             badgeStatus.value.value = 'processing';
             badgeStatus.value.label = '正在运行';
           }

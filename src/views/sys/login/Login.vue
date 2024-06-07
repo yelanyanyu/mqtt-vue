@@ -18,13 +18,12 @@
             <AppLogo class="-enter-x logo" />
             <img :alt="title" src="../../../assets/svg/login-box-bg.svg" class="-enter-x w-1/2" />
             <div class="-enter-x mt-10 text-white font-medium">
-              <span class="mt-4 inline-block text-3xl"> 最好用的快速开发平台</span>
+              <span class="mt-4 inline-block text-3xl"> 物联网平台</span>
             </div>
             <div class="text-md -enter-x mt-5 text-white font-normal dark:text-gray-500">
-              JeeSite 是一个专业的平台，是一个让你使用放心的平台。<br />
               前端基于 Vue3、Vite、TypeScript、Ant-Design-Vue、Vben Admin，<br />
-              后台基于 Spring Boot、Apache MyBatis 等，最先进、最经典的技术栈。<br />
-              精致的 UI、规范的代码书写、匠心著作、封装细节、专注业务、快速开发。<br />
+              后台基于 SSM、Apache MyBatis 等，最先进、最经典的技术栈。<br />
+              精致的 UI、规范的代码书写。<br />
             </div>
           </div>
         </div>

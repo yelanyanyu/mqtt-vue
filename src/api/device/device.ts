@@ -28,7 +28,7 @@ export interface FanVO extends Device {
 
 export interface LedData {
   lux: number;
-  temprature: number;
+  temperature: number;
 }
 
 export const deviceList = (params?: Device | any) =>
